@@ -1,0 +1,8 @@
+Flask==2.3.3
+python-wireguard==0.1.0
+pyOpenSSL==23.2.0
+requests==2.31.0
+psutil==5.9.5
+python-dotenv==1.0.0
+Flask-SocketIO==5.3.4
+PyInstaller==5.13.0 

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreeLimitVPN</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h1 class="text-2xl font-bold mb-6 text-center">FreeLimitVPN</h1>
+                
+                <!-- Connection Status -->
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-2">Connection Status</h2>
+                    <div id="status" class="p-4 rounded-lg bg-gray-100">
+                        <p class="text-gray-600">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Bandwidth Usage -->
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-2">Bandwidth Usage</h2>
+                    <div class="bg-gray-200 rounded-full h-4 mb-2">
+                        <div id="bandwidth-bar" class="bg-blue-500 h-4 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p id="bandwidth-text" class="text-sm text-gray-600">0 MB / 500 MB used</p>
+                </div>
+
+                <!-- Server Selection -->
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-2">Available Servers</h2>
+                    <div id="servers" class="space-y-2">
+                        <!-- Servers will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Connection Controls -->
+                <div class="flex justify-center space-x-4">
+                    <button id="connect-btn" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
+                        Connect
+                    </button>
+                    <button id="disconnect-btn" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600">
+                        Disconnect
+                    </button>
+                </div>
+
+                <!-- Warning Message -->
+                <div class="mt-6 p-4 bg-yellow-100 rounded-lg">
+                    <p class="text-yellow-800">
+                        ⚠️ Warning: This is a free VPN service with limited bandwidth (500MB/day).
+                        For security and privacy, consider using a paid VPN service.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let currentStatus = null;
+
+        function updateUI(status) {
+            currentStatus = status;
+            
+            // Update connection status
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <p class="font-semibold">Status: ${status.connected ? 'Connected' : 'Disconnected'}</p>
+                ${status.current_server ? `<p>Server: ${status.current_server.name}</p>` : ''}
+            `;
+
+            // Update bandwidth
+            const usage = status.bandwidth.daily_usage / (1024 * 1024);
+            const limit = status.bandwidth.limit / (1024 * 1024);
+            const percentage = (usage / limit) * 100;
+            
+            document.getElementById('bandwidth-bar').style.width = `${percentage}%`;
+            document.getElementById('bandwidth-text').textContent = 
+                `${usage.toFixed(2)} MB / ${limit} MB used`;
+
+            // Update server list
+            const serversDiv = document.getElementById('servers');
+            serversDiv.innerHTML = status.servers.free_servers.map(server => `
+                <div class="p-3 border rounded-lg ${status.current_server?.name === server.name ? 'bg-blue-50' : ''}">
+                    <p class="font-semibold">${server.name}</p>
+                    <p class="text-sm text-gray-600">${server.host}:${server.port}</p>
+                </div>
+            `).join('');
+
+            // Update button states
+            document.getElementById('connect-btn').disabled = status.connected;
+            document.getElementById('disconnect-btn').disabled = !status.connected;
+        }
+
+        // Socket event handlers
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('status_update', (status) => {
+            updateUI(status);
+        });
+
+        // Button event handlers
+        document.getElementById('connect-btn').addEventListener('click', () => {
+            if (currentStatus && currentStatus.servers.free_servers.length > 0) {
+                const server = currentStatus.servers.free_servers[0];
+                fetch(`/api/connect/${server.name}`)
+                    .then(response => response.json())
+                    .then(data => console.log(data));
+            }
+        });
+
+        document.getElementById('disconnect-btn').addEventListener('click', () => {
+            fetch('/api/disconnect')
+                .then(response => response.json())
+                .then(data => console.log(data));
+        });
+
+        // Initial status fetch
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(updateUI);
+    </script>
+</body>
+</html> 

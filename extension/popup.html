@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FreeLimitVPN</title>
+    <style>
+        body {
+            width: 300px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .status {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .connect {
+            background-color: #28a745;
+            color: white;
+        }
+        .disconnect {
+            background-color: #dc3545;
+            color: white;
+        }
+        .bandwidth {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h2>FreeLimitVPN</h2>
+    <div id="status" class="status disconnected">Disconnected</div>
+    <div id="server-info"></div>
+    <button id="connect" class="connect">Connect</button>
+    <button id="disconnect" class="disconnect" disabled>Disconnect</button>
+    <div class="bandwidth">
+        <div>Bandwidth Usage:</div>
+        <div id="bandwidth">0 MB / 500 MB</div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html> 
